@@ -2,7 +2,9 @@ package com.rookies3.myspringbootlab.service;
 
 import com.rookies3.myspringbootlab.controller.dto.BookDTO;
 import com.rookies3.myspringbootlab.entity.Book;
+import com.rookies3.myspringbootlab.entity.BookDetail;
 import com.rookies3.myspringbootlab.exception.BusinessException;
+import com.rookies3.myspringbootlab.exception.ErrorCode;
 import com.rookies3.myspringbootlab.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,53 +19,100 @@ import java.util.List;
 public class BookService {
     private final BookRepository bookRepository;
 
-    public List<BookDTO.BookResponse> getAllBooks(){
+    public List<BookDTO.Response> getAllBooks() {
         List<Book> books = bookRepository.findAll();
         return books.stream()
-                .map(BookDTO.BookResponse::from).toList();
+                .map(BookDTO.Response::fromEntity).toList();
     }
 
-    public BookDTO.BookResponse getBookById(Long id){
+    public BookDTO.Response getBookById(Long id) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Book Not Found", HttpStatus.NOT_FOUND));
-        return BookDTO.BookResponse.from(book);
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Book", "id", id));
+        return BookDTO.Response.fromEntity(book);
     }
 
-    public BookDTO.BookResponse getBookByIsbn(String isbn){
+    public BookDTO.Response getBookByIsbn(String isbn) {
         Book book = bookRepository.findByIsbn(isbn)
-                .orElseThrow(() -> new BusinessException("Book Not Found", HttpStatus.NOT_FOUND));
-        return BookDTO.BookResponse.from(book);
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Book", "ISBN", isbn));
+        return BookDTO.Response.fromEntity(book);
     }
 
-    public List<BookDTO.BookResponse> getBooksByAuthor(String author){
-        List<Book> books = bookRepository.findByAuthor(author);
+    public List<BookDTO.Response> getBooksByAuthor(String author) {
+        List<Book> books = bookRepository.findByAuthorContainingIgnore(author);
         return books.stream()
-                .map(BookDTO.BookResponse::from).toList();
+                .map(BookDTO.Response::fromEntity).toList();
+    }
+
+    public List<BookDTO.Response> getBooksByTitle(String title) {
+        List<Book> books = bookRepository.findByTitleContainingIgnore(title);
+        return books.stream()
+                .map(BookDTO.Response::fromEntity).toList();
     }
 
     @Transactional
-    public BookDTO.BookResponse createBook(BookDTO.BookCreateRequest request){
-        bookRepository.findByIsbn(request.getIsbn())
-                .ifPresent(book->{throw new BusinessException("Book with this ISBN already exist",HttpStatus.CONFLICT);});
-        Book createdBook = bookRepository.save(request.toEntity());
-        return BookDTO.BookResponse.from(createdBook);
+    public BookDTO.Response createBook(BookDTO.Request request) {
+        if (bookRepository.existsByIsbn(request.getIsbn())) {
+            throw new BusinessException(ErrorCode.ISBN_DUPLICATE, request.getIsbn());
+        }
+
+        Book createdBook = Book.builder()
+                .title(request.getTitle())
+                .author(request.getAuthor())
+                .isbn(request.getIsbn())
+                .price(request.getPrice())
+                .publishDate(request.getPublishDate()).build();
+
+        if (request.getDetailRequest() != null) {
+            BookDetail bookDetail = BookDetail.builder()
+                    .description(request.getDetailRequest().getDescription())
+                    .language(request.getDetailRequest().getLanguage())
+                    .pageCount(request.getDetailRequest().getPageCount())
+                    .publisher(request.getDetailRequest().getPublisher())
+                    .coverImageUrl(request.getDetailRequest().getCoverImageUrl())
+                    .edition(request.getDetailRequest().getEdition())
+                    .build();
+            createdBook.setBookDetail(bookDetail);
+        }
+        Book savedBook = bookRepository.save(createdBook);
+        return BookDTO.Response.fromEntity(savedBook);
     }
 
     @Transactional
-    public BookDTO.BookResponse updateBook(Long id, BookDTO.BookUpdateRequest request){
+    public BookDTO.Response updateBook(Long id, BookDTO.Request request) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Book Not Found", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,"Book","id",id));
+
+        if (!book.getIsbn().equals((request.getIsbn())) && bookRepository.existsByIsbn(request.getIsbn())){
+            throw new BusinessException(ErrorCode.ISBN_DUPLICATE, request.getIsbn());
+        }
         book.setPrice(request.getPrice());
         book.setTitle(request.getTitle());
         book.setAuthor(request.getAuthor());
         book.setPublishDate(request.getPublishDate());
-        return BookDTO.BookResponse.from(book);
+        if (request.getDetailRequest() != null){
+            BookDetail bookDetail = book.getBookDetail();
+
+            if(bookDetail == null){
+                bookDetail = new BookDetail();
+                bookDetail.setBook(book);
+                book.setBookDetail(bookDetail);
+            }
+
+            bookDetail.setDescription(request.getDetailRequest().getDescription());
+            bookDetail.setEdition(request.getDetailRequest().getEdition());
+            bookDetail.setLanguage(request.getDetailRequest().getLanguage());
+            bookDetail.setPublisher(request.getDetailRequest().getPublisher());
+            bookDetail.setPageCount(request.getDetailRequest().getPageCount());
+            bookDetail.setCoverImageUrl(request.getDetailRequest().getCoverImageUrl());
+        }
+        Book updatedBook = bookRepository.save(book);
+        return BookDTO.Response.fromEntity(updatedBook);
     }
 
     @Transactional
-    public void deleteBook(Long id){
+    public void deleteBook(Long id) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Book Not Found", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,"Book","id",id));
         bookRepository.delete(book);
     }
 }

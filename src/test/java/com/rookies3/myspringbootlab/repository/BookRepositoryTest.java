@@ -57,7 +57,7 @@ class BookRepositoryTest {
     @Test
     @Rollback(value = false)
     void testFindByAuthor(){
-        List<Book> books = bookRepository.findByAuthor("박둘리");
+        List<Book> books = bookRepository.findByAuthorContainingIgnore("박둘리");
         assertThat(books.get(0).getIsbn()).isEqualTo("9788956746432");
         assertThat(books.get(0).getPrice()).isEqualTo(35000);
     }
