@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +23,7 @@ public class BookService {
     public List<BookDTO.Response> getAllBooks() {
         List<Book> books = bookRepository.findAll();
         return books.stream()
-                .map(BookDTO.Response::fromEntity).toList();
+                .map(BookDTO.Response::fromEntity).collect(Collectors.toList());
     }
 
     public BookDTO.Response getBookById(Long id) {
@@ -38,13 +39,13 @@ public class BookService {
     }
 
     public List<BookDTO.Response> getBooksByAuthor(String author) {
-        List<Book> books = bookRepository.findByAuthorContainingIgnore(author);
+        List<Book> books = bookRepository.findByAuthorIgnoreCaseContaining(author);
         return books.stream()
                 .map(BookDTO.Response::fromEntity).toList();
     }
 
     public List<BookDTO.Response> getBooksByTitle(String title) {
-        List<Book> books = bookRepository.findByTitleContainingIgnore(title);
+        List<Book> books = bookRepository.findByTitleIgnoreCaseContaining(title);
         return books.stream()
                 .map(BookDTO.Response::fromEntity).toList();
     }

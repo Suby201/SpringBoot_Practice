@@ -12,8 +12,8 @@ import java.util.Optional;
 @Repository
 public interface BookRepository extends JpaRepository<Book,Long> {
     Optional<Book> findByIsbn(String isbn);
-    List<Book> findByAuthorContainingIgnore(String author);
-    List<Book> findByTitleContainingIgnore(String title);
+    List<Book> findByAuthorIgnoreCaseContaining(String author);
+    List<Book> findByTitleIgnoreCaseContaining(String title);
     @Query("SELECT b FROM Book b JOIN FETCH b.bookDetail WHERE b.id = :id")
     Optional<Book> findByIdWithBookDetail(@Param("id") Long id);
     @Query("SELECT b FROM Book b JOIN FETCH b.bookDetail WHERE b.isbn = :isbn")
