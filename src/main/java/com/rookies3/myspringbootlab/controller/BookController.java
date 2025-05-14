@@ -40,13 +40,13 @@ public class BookController {
         return ResponseEntity.ok(book);
     }
 
-    @GetMapping("/author/{author}/")
+    @GetMapping("/search/author?author={author}")
     public ResponseEntity<List<BookDTO.Response>> getBooksByAuthor(@PathVariable String author){
         List<BookDTO.Response> booksByAuthor = bookService.getBooksByAuthor(author);
         return ResponseEntity.ok(booksByAuthor);
     }
 
-    @GetMapping("/title/{title}/")
+    @GetMapping("/search/title?title={title}")
     public ResponseEntity<List<BookDTO.Response>> getBooksByTitle(@PathVariable String title) {
         List<BookDTO.Response> booksByAuthor = bookService.getBooksByTitle(title);
         return ResponseEntity.ok(booksByAuthor);
