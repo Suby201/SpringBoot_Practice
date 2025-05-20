@@ -14,6 +14,7 @@ import java.time.LocalDate;
 @Getter @Setter @Builder
 @DynamicUpdate
 public class Book {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "book_id")
@@ -22,18 +23,18 @@ public class Book {
     @Column(nullable = false)
     private String title;
 
-    @Column
+    @Column(nullable = false)
     private String author;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true, nullable = false)
     private String isbn;
 
-    @Column
     private Integer price;
 
-    @Column
     private LocalDate publishDate;
 
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "book", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "book",
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY)
     private BookDetail bookDetail;
 }

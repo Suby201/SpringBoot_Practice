@@ -20,52 +20,55 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @RequestMapping("/api/books")
 public class BookController {
+
     private final BookService bookService;
 
     @GetMapping
-    public ResponseEntity<List<BookDTO.Response>> getAllBooks(){
+    public ResponseEntity<List<BookDTO.Response>> getAllBooks() {
         List<BookDTO.Response> books = bookService.getAllBooks();
         return ResponseEntity.ok(books);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BookDTO.Response> getBookById(@PathVariable Long id){
+    public ResponseEntity<BookDTO.Response> getBookById(@PathVariable Long id) {
         BookDTO.Response book = bookService.getBookById(id);
         return ResponseEntity.ok(book);
     }
 
-    @GetMapping("/isbn/{isbn}/")
-    public ResponseEntity<BookDTO.Response> getBookByIsbn(@PathVariable String isbn){
+    @GetMapping("/isbn/{isbn}")
+    public ResponseEntity<BookDTO.Response> getBookByIsbn(@PathVariable String isbn) {
         BookDTO.Response book = bookService.getBookByIsbn(isbn);
         return ResponseEntity.ok(book);
     }
 
-    @GetMapping("/search/author?author={author}")
-    public ResponseEntity<List<BookDTO.Response>> getBooksByAuthor(@PathVariable String author){
-        List<BookDTO.Response> booksByAuthor = bookService.getBooksByAuthor(author);
-        return ResponseEntity.ok(booksByAuthor);
+    @GetMapping("/search/author")
+    public ResponseEntity<List<BookDTO.Response>> getBooksByAuthor(@RequestParam String author) {
+        List<BookDTO.Response> books = bookService.getBooksByAuthor(author);
+        return ResponseEntity.ok(books);
     }
 
-    @GetMapping("/search/title?title={title}")
-    public ResponseEntity<List<BookDTO.Response>> getBooksByTitle(@PathVariable String title) {
-        List<BookDTO.Response> booksByAuthor = bookService.getBooksByTitle(title);
-        return ResponseEntity.ok(booksByAuthor);
+    @GetMapping("/search/title")
+    public ResponseEntity<List<BookDTO.Response>> getBooksByTitle(@RequestParam String title) {
+        List<BookDTO.Response> books = bookService.getBooksByTitle(title);
+        return ResponseEntity.ok(books);
     }
 
     @PostMapping
-    public ResponseEntity<BookDTO.Response> createBook(@Valid @RequestBody BookDTO.Request request){
-        BookDTO.Response book = bookService.createBook(request);
-        return ResponseEntity.ok(book);
+    public ResponseEntity<BookDTO.Response> createBook(@Valid @RequestBody BookDTO.Request request) {
+        BookDTO.Response createdBook = bookService.createBook(request);
+        return new ResponseEntity<>(createdBook, HttpStatus.CREATED);
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<BookDTO.Response> updateBook(@PathVariable Long id, @Valid @RequestBody BookDTO.Request request){
+    @PutMapping("/{id}")
+    public ResponseEntity<BookDTO.Response> updateBook(
+            @PathVariable Long id,
+            @Valid @RequestBody BookDTO.Request request) {
         BookDTO.Response updatedBook = bookService.updateBook(id, request);
         return ResponseEntity.ok(updatedBook);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBook(@PathVariable Long id){
+    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
         bookService.deleteBook(id);
         return ResponseEntity.noContent().build();
     }
