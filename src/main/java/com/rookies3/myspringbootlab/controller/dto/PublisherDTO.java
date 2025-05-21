@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import org.apache.logging.log4j.core.config.plugins.validation.constraints.NotBlank;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class PublisherDTO {

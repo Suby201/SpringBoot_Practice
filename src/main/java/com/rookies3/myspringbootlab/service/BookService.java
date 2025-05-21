@@ -6,6 +6,7 @@ import com.rookies3.myspringbootlab.entity.BookDetail;
 import com.rookies3.myspringbootlab.exception.BusinessException;
 import com.rookies3.myspringbootlab.exception.ErrorCode;
 import com.rookies3.myspringbootlab.repository.BookRepository;
+import com.rookies3.myspringbootlab.repository.PublisherRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class BookService {
     private final BookRepository bookRepository;
+    private final PublisherRepository publisherRepository;
 
     public List<BookDTO.Response> getAllBooks() {
         List<Book> books = bookRepository.findAll();
@@ -47,6 +49,14 @@ public class BookService {
     public List<BookDTO.Response> getBooksByTitle(String title) {
         List<Book> books = bookRepository.findByTitleIgnoreCaseContaining(title);
         return books.stream()
+                .map(BookDTO.Response::fromEntity).toList();
+    }
+
+    public List<BookDTO.Response> getBooksByPublisherId(Long publisherId){
+        if(!publisherRepository.existsById(publisherId)){
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,"Publisher","id",publisherId);
+        }
+        return bookRepository.findByPublisherId(publisherId).stream()
                 .map(BookDTO.Response::fromEntity).toList();
     }
 
